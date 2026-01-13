@@ -1,0 +1,26 @@
+version: 2
+
+models:
+  - name: fct_transactions
+    columns:
+      - name: txn_id
+        tests:
+          - unique
+          - not_null
+      - name: status
+        tests:
+          - accepted_values:
+              values: ['authorized','captured','failed','refunded','chargeback']
+      - name: customer_risk_tier
+        tests:
+          - accepted_values:
+              values: ['low','medium','high']
+
+  - name: agg_daily_merchant_kpis
+    columns:
+      - name: day
+        tests:
+          - not_null
+      - name: merchant_id
+        tests:
+          - not_null

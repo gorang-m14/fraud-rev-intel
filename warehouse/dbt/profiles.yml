@@ -1,0 +1,12 @@
+fri_warehouse:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: postgres
+      user: fri
+      password: fri
+      port: 5432
+      dbname: fri_oltp
+      schema: public
+      threads: 4

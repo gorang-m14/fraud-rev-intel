@@ -1,0 +1,150 @@
+services:
+  dashboard:
+    build:
+      context: .
+      dockerfile: dashboard/Dockerfile
+    container_name: fri_dashboard
+    environment:
+      FRI_CH_HOST: "clickhouse"
+      FRI_CH_HTTP_PORT: "8123"
+      FRI_CH_DB: "analytics"
+      FRI_CH_USER: "fri"
+      FRI_CH_PASSWORD: "fri"
+    ports:
+      - "8501:8501"
+    depends_on:
+      - clickhouse
+
+  metabase:
+    image: metabase/metabase:latest
+    container_name: fri_metabase
+    ports:
+      - "3000:3000"
+    depends_on:
+      - clickhouse
+      - postgres
+
+  postgres:
+    image: postgres:16
+    container_name: fri_postgres
+    environment:
+      POSTGRES_USER: fri
+      POSTGRES_PASSWORD: fri
+      POSTGRES_DB: fri_oltp
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./infra/init_sql:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fri -d fri_oltp"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:24.8
+    container_name: fri_clickhouse
+    environment:
+      CLICKHOUSE_USER: fri
+      CLICKHOUSE_PASSWORD: fri
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: "1"
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+    volumes:
+      - chdata:/var/lib/clickhouse
+      - ./infra/init_clickhouse:/docker-entrypoint-initdb.d:ro
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+
+  dbt:
+    build:
+      context: .
+      dockerfile: warehouse/dbt/Dockerfile
+    container_name: fri_dbt
+    environment:
+      DBT_PROFILES_DIR: /app
+    volumes:
+      - ./warehouse/dbt:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  generator:
+    build:
+      context: .
+      dockerfile: ingestion/Dockerfile
+    container_name: fri_generator
+    environment:
+      FRI_PG_DSN: "postgresql://fri:fri@postgres:5432/fri_oltp"
+      FRI_CH_HOST: "clickhouse"
+      FRI_CH_HTTP_PORT: "8123"
+      FRI_CH_USER: "fri"
+      FRI_CH_PASSWORD: "fri"
+    volumes:
+      - ./ingestion:/app/ingestion
+      - ./warehouse:/app/warehouse
+    depends_on:
+      postgres:
+        condition: service_healthy
+      clickhouse:
+        condition: service_started
+
+  # Airflow (LocalExecutor) + Postgres/Redis for Airflow metadata
+  airflow-postgres:
+    image: postgres:16
+    container_name: fri_airflow_postgres
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - airflow_pgdata:/var/lib/postgresql/data
+
+  airflow-redis:
+    image: redis:7
+    container_name: fri_airflow_redis
+    ports:
+      - "6379:6379"
+
+  airflow:
+    image: apache/airflow:2.9.3
+    container_name: fri_airflow
+    depends_on:
+      - airflow-postgres
+      - airflow-redis
+      - postgres
+      - clickhouse
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres:5432/airflow
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__WEBSERVER__EXPOSE_CONFIG: "true"
+      # Project connections (used by DAG)
+      FRI_PG_DSN: "postgresql://fri:fri@postgres:5432/fri_oltp"
+      FRI_CH_HOST: "clickhouse"
+      FRI_CH_HTTP_PORT: "8123"
+    volumes:
+      - ./orchestration/airflow/dags:/opt/airflow/dags
+      - ./orchestration/airflow/plugins:/opt/airflow/plugins
+      - ./ingestion:/opt/project/ingestion:ro
+      - ./warehouse:/opt/project/warehouse:ro
+    ports:
+      - "8080:8080"
+    command: >
+      bash -c "
+      airflow db migrate &&
+      airflow users create --username airflow --password airflow --firstname Air --lastname Flow --role Admin --email airflow@example.com || true &&
+      airflow webserver & airflow scheduler
+      "
+
+volumes:
+  pgdata:
+  chdata:
+  airflow_pgdata:
+
+ 
+

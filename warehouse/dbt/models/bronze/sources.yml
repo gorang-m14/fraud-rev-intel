@@ -1,0 +1,14 @@
+version: 2
+
+sources:
+  - name: oltp
+    schema: public
+    tables:
+      - name: customers
+      - name: merchants
+      - name: payment_methods
+      - name: transactions
+      - name: events
+      - name: disputes
+      - name: alerts
+      - name: cases

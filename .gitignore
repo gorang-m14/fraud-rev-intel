@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.venv/
+.env
+.env.*
+logs/
+*.log
+.DS_Store
+warehouse/dbt/target/
+warehouse/dbt/dbt_packages/
+warehouse/dbt/logs/

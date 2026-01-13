@@ -1,0 +1,4 @@
+psycopg2-binary==2.9.9
+faker==25.9.1
+clickhouse-connect==0.7.14
+python-dateutil==2.9.0.post0
