@@ -81,7 +81,4 @@ orchestration/airflow/ # DAGs
 
 ---
 
-## Next upgrades (recommended)
-- Add Superset/Metabase dashboards (starter notes in `dashboards/`).
-- Add Debezium/Kafka for true streaming CDC.
-- Add anomaly detection + alerting (z-score/spike detection in SQL + Airflow notifications).
+
