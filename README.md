@@ -1,48 +1,26 @@
 # Fraud & Revenue Intelligence Platform (Postgres + dbt + ClickHouse + Airflow + Streamlit)
 
-An end-to-end analytics stack that simulates a payments/fraud environment and turns raw OLTP events into fast, dashboard-ready OLAP tables.
-
-It includes:
-- **Synthetic data generation** (transactions + user events + alerts)
-- **Warehouse modeling with dbt** (bronze → silver → gold + tests)
-- **Serving layer in ClickHouse** (optimized for analytics & dashboards)
-- **Orchestration with Airflow**
-- **A clean Streamlit dashboard** for executive + fraud monitoring views
+A full, local analytics stack that simulates a payments + fraud environment and turns raw OLTP data into fast, dashboard-ready OLAP tables. The project covers the complete path from data generation → transformations/testing → serving layer → dashboards.
 
 ---
 
-## What you can demo in 2 minutes
+## What’s inside
 
-1. Bring the stack up with Docker  
-2. Generate realistic payment + fraud-like data  
-3. Run dbt models + tests  
-4. Sync analytics tables into ClickHouse  
-5. Open the Streamlit dashboard and filter/drill-down by merchant, country, risk tier
+- **Postgres (OLTP)**: normalized raw tables (transactions, events, alerts, disputes)
+- **dbt**: bronze → silver → gold models + data tests (quality gates)
+- **ClickHouse (OLAP)**: serving tables and rollups optimized for analytics
+- **Airflow**: pipeline orchestration (ingest → dbt → ClickHouse sync)
+- **Streamlit**: clean dashboard UI with filters + merchant drill-down
 
 ---
 
 ## Architecture (high level)
 
-**Postgres (OLTP)**  
-Stores normalized raw tables like `transactions`, `events`, `alerts` etc. (write-optimized).
-
-**dbt (Warehouse transforms + tests)**  
-Builds analytical models:
-- Bronze: thin views on raw tables  
-- Silver: enriched/typed models (joins, cleaning)  
-- Gold: final fact + KPI rollups (`fct_transactions`, `agg_daily_merchant_kpis`)  
-Includes data quality checks (unique/not_null/accepted_values).
-
-**ClickHouse (OLAP serving)**  
-Materializes fast query tables for dashboards:
-- `analytics.fct_transactions`
-- `analytics.agg_daily_merchant_kpis`
-
-**Airflow (Orchestration)**  
-Pipeline: ingest → dbt build → ClickHouse sync.
-
-**Streamlit (Product-style analytics UI)**  
-Executive KPIs + fraud monitoring + merchant drill-downs.
+1. **Ingestion** writes synthetic but realistic payment + event streams into **Postgres**
+2. **dbt** transforms raw tables into analytics-ready **gold** models (facts + rollups) with tests
+3. **ClickHouse** stores the serving layer (`analytics.*`) for low-latency dashboard queries
+4. **Streamlit** reads from ClickHouse to power interactive analytics views
+5. **Airflow** schedules and runs the full pipeline
 
 ---
 
@@ -50,7 +28,7 @@ Executive KPIs + fraud monitoring + merchant drill-downs.
 
 - **Streamlit Dashboard:** http://localhost:8501  
 - **Metabase (optional):** http://localhost:3000  
-- **Airflow:** http://localhost:8080  (login: `airflow / airflow`)
+- **Airflow:** http://localhost:8080 (login: `airflow / airflow`)
 
 ---
 
@@ -59,6 +37,6 @@ Executive KPIs + fraud monitoring + merchant drill-downs.
 ### 0) Prerequisites
 - Docker Desktop + Docker Compose
 
-### 1) Start the stack
+### 1) Start everything
 ```bash
 docker compose up -d --build
