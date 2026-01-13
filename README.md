@@ -41,13 +41,7 @@ docker compose run --rm generator python -m warehouse.sync_to_clickhouse
 ### 5) # Dashboard (Streamlit)
 # http://localhost:8501
 
-## What you can say in interviews (talking points)
 
-- Designed OLTP + OLAP separation; implemented **idempotent ingestion** and **dedupe**.
-- Built dbt layer with **tests** (uniqueness, not_null, accepted_values) and **freshness** checks.
-- Implemented advanced SQL analytics: **cohorts**, **funnels**, **LTV**, **chargeback loss**, **fraud velocity rules**.
-- Optimized for performance: Postgres indexes + partitions + ClickHouse partitions/order keys.
-- Added governance: PII masking and role-ready patterns.
 
 ---
 
