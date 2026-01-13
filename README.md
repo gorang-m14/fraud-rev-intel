@@ -1,10 +1,6 @@
 # Real-Time Fraud + Revenue Intelligence Platform (Postgres + ClickHouse + dbt + Airflow)
 
-This repo is a **resume-grade** SQL + databases project that is **ready to run locally** using Docker.
-It simulates a payments marketplace, ingests events into **Postgres (OLTP)**, transforms/validates with **dbt**, and
-serves fast analytics tables in **ClickHouse (OLAP)**. **Airflow** orchestrates ingestion + dbt + ClickHouse sync.
 
-> You can start small (Postgres + generator) and then enable Airflow / ClickHouse as you like.
 
 ## Architecture (high level)
 
